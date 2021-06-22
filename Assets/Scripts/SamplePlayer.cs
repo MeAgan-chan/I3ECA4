@@ -28,7 +28,7 @@ public class SamplePlayer : MonoBehaviour
     /// The camera attached to the player model.
     /// Should be dragged in from Inspector.
     /// </summary>
-    private Camera playerCamera;
+    public Camera playerCamera;
 
     private string currentState;
 
@@ -37,13 +37,13 @@ public class SamplePlayer : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        nextState = "Idling";
+        nextState = "Idle";
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(nextState != currentState)
+        if (nextState != currentState)
         {
             SwitchState();
         }
@@ -65,11 +65,31 @@ public class SamplePlayer : MonoBehaviour
 
     private IEnumerator Idle()
     {
-        while(currentState == "Idle")
+        while (currentState == "Idle")
         {
-            if(Input.GetAxis("Horizontal") == 0 && Input.GetAxis("Vertical") != 0)
+            if (Input.GetAxis("Horizontal") == 0 && Input.GetAxis("Vertical") != 0)
             {
                 nextState = "Moving";
+            }
+            if (Input.GetAxis("Horizontal") != 0 && Input.GetAxis("Vertical") == 0)
+            {
+                nextState = "Moving";
+            }
+            if (Input.GetAxis("Horizontal") != 0 && Input.GetAxis("Vertical") != 0)
+            {
+                nextState = "Moving";
+            }
+            yield return null;
+        }
+    }
+
+    private IEnumerator Moving()
+    {
+        while (currentState == "Moving")
+        {
+            if (!CheckMovement())
+            {
+                nextState = "Idle";
             }
             yield return null;
         }
@@ -78,12 +98,12 @@ public class SamplePlayer : MonoBehaviour
     private void CheckRotation()
     {
         Vector3 playerRotation = transform.rotation.eulerAngles;
-        playerRotation.y = Input.GetAxis("Mouse X") * rotationSpeed * Time.deltaTime;
+        playerRotation.y += Input.GetAxis("Mouse X") * rotationSpeed * Time.deltaTime;
 
         transform.rotation = Quaternion.Euler(playerRotation);
 
         Vector3 cameraRotation = playerCamera.transform.rotation.eulerAngles;
-        cameraRotation.x += Input.GetAxis("Mouse Y") * rotationSpeed * Time.deltaTime;
+        cameraRotation.x -= Input.GetAxis("Mouse Y") * rotationSpeed * Time.deltaTime;
 
         playerCamera.transform.rotation = Quaternion.Euler(cameraRotation);
     }
@@ -95,9 +115,12 @@ public class SamplePlayer : MonoBehaviour
     private bool CheckMovement()
     {
         Vector3 newPos = transform.position;
+
         Vector3 xMovement = transform.right * Input.GetAxis("Horizontal");
         Vector3 zMovement = transform.forward * Input.GetAxis("Vertical");
-        Vector3 movementVector = xMovement + zMovement;
+
+        Vector3 movementVector = zMovement + xMovement;
+
         if (movementVector.sqrMagnitude > 0)
         {
             movementVector *= moveSpeed * Time.deltaTime;
@@ -110,19 +133,6 @@ public class SamplePlayer : MonoBehaviour
         {
             return true;
         }
-        
 
     }
-    private IEnumerator Moving()
-    {
-        while (currentState == "Moving")
-        {
-            if (!CheckMovement())
-            {
-                nextState = "Idle";
-            }
-            yield return null;
-        }
-        }
-    }
-
+}
